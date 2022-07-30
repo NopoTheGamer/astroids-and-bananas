@@ -6,9 +6,7 @@ from pygame.transform import rotozoom
 
 
 # —--------------------------------------
-# NEW
-# creating a wrap for the ship
-# new global method
+# Functions
 
 def wrap_position(position, screen):
     x, y = position  # where are we
@@ -18,6 +16,7 @@ def wrap_position(position, screen):
 
 
 # —--------------------------------------
+# Classes
 
 
 class Ship:
@@ -77,6 +76,8 @@ class Bullet:
     def random_vel(self):
         self.velocity = Vector2(random.randint(-2, 2), random.randint(-2, 2) * 5)
 
+
+# Classes for the types of Asteroids
 
 class Asteroid:
     def __init__(self, position):
@@ -146,17 +147,24 @@ class ReflectiveAsteroid(Asteroid):
         super().destroy()
 
 
-pygame.init()
-score = 0
-last_score = 0
-screen = pygame.display.set_mode((1880, 1000))
-pygame.display.set_caption("'Roids")
+# —--------------------------------------
+# Initialization
+
+
+pygame.init()  # Pygame initialization
+pygame.display.set_caption("Asteroids and Bananas")
 background = pygame.image.load('assets/space_aw1.png')
+screen = pygame.display.set_mode((1880, 1000))
+clock = pygame.time.Clock()
+
+score = 0  # Variables
+last_score = 0
 game_over = False
 ship = Ship((100, 700))
 asteroids = []
 out_of_bounds = [-150, -150, screen.get_width() + 150, screen.get_height() + 150]
-for i in range(35):
+
+for i in range(35):  # Initialize the asteroids
     rand = random.randint(0, 2)
     if rand == 0:
         asteroids.append(
@@ -164,8 +172,13 @@ for i in range(35):
     elif rand == 1:
         asteroids.append(Asteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
     elif rand == 2:
-        asteroids.append(ExplosiveAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
-clock = pygame.time.Clock()
+        asteroids.append(
+            ExplosiveAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
+
+# —--------------------------------------
+# Main game loop
+
+
 while not game_over:
     clock.tick(75)
     for event in pygame.event.get():
