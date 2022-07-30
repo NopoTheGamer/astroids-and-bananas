@@ -74,6 +74,9 @@ class Bullet:
     def get_pos(self):
         return self.position
 
+    def random_vel(self):
+        self.velocity = Vector2(random.randint(-2, 2), random.randint(-2, 2) * 5)
+
 
 class Asteroid:
     def __init__(self, position):
@@ -82,7 +85,8 @@ class Asteroid:
         self.velocity = Vector2(random.randint(-3, 3), random.randint(-3, 3)) / 2
         self.image = pygame.image.load('assets/lunar.png')
         self.image = pygame.transform.scale(self.image, (128, 128))
-        self.id = random.randint(0, 10000)
+        self.id = random.randint(0, 10000)  # if the id's collide, that's "intended"
+        self.type = "default"
 
     def update(self):
         self.position += self.velocity
@@ -111,6 +115,7 @@ class ExplosiveAsteroid(Asteroid):
         self.boom = pygame.image.load('assets/boom.png')
         self.boom = pygame.transform.scale(self.boom, (128, 128))
         self.explosion_size = Vector2(128, 128)
+        self.type = "explosive"
 
     def destroy(self):
         global score
@@ -127,6 +132,20 @@ class ExplosiveAsteroid(Asteroid):
         screen.blit(self.boom, self.position)
 
 
+class ReflectiveAsteroid(Asteroid):
+    def __init__(self, position):
+        super().__init__(position)
+        self.image = pygame.image.load('assets/reflect.png')
+        self.image = pygame.transform.scale(self.image, (128, 128))
+        self.type = "reflect"
+
+    def destroy(self):
+        for b in ship.bullets:
+            if b.get_pos().distance_to(self.position) < 128 and b.get_pos().distance_to(self.position2) < 128:
+                b.random_vel()
+        super().destroy()
+
+
 pygame.init()
 score = 0
 last_score = 0
@@ -138,11 +157,14 @@ ship = Ship((100, 700))
 asteroids = []
 out_of_bounds = [-150, -150, screen.get_width() + 150, screen.get_height() + 150]
 for i in range(35):
-    if random.randint(0, 1) == 0:
+    rand = random.randint(0, 2)
+    if rand == 0:
         asteroids.append(
-            ExplosiveAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
-    else:
+            ReflectiveAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
+    elif rand == 1:
         asteroids.append(Asteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
+    elif rand == 2:
+        asteroids.append(ExplosiveAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
 clock = pygame.time.Clock()
 while not game_over:
     clock.tick(75)
@@ -156,7 +178,7 @@ while not game_over:
 
     if score != last_score:
         last_score = score
-        print(score)
+        print(f"score: {score}")
 
     for b in ship.bullets:
         b.update()
@@ -171,7 +193,8 @@ while not game_over:
             if b.get_pos().distance_to(a.position) < 128 and b.get_pos().distance_to(a.position2) < 128:
                 score += 1
                 a.destroy()
-                ship.bullets.remove(b)
+                if a.type != "reflect":
+                    ship.bullets.remove(b)
                 break
 
     for a in asteroids:
