@@ -38,7 +38,9 @@ def shop(open):
     global double_time
     global more_spawns_counter
     global more_spawns
+    global fps
     if open:
+        fps = 55  # This slows down the game a tad, so you have more time to think in the shop
         black = pygame.image.load('assets/black.png')
         black = pygame.transform.scale(black, (8000, 600))
         screen.blit(black, (0, 920))
@@ -51,11 +53,14 @@ def shop(open):
             f'(3) Double Bananas for 15s Costs {20} bananas', True, (255, 255, 255))
         shop_item_4 = font.render(
             f'(4) Spawn Next Wave Costs {25 + more_spawns_counter * 5} bananas', True, (255, 255, 255))
+
         screen.blit(shop_item_1, (10, 950))
         if turning_rate == 1:
             screen.blit(shop_item_2, (470, 950))
         if double_time == 0:
             screen.blit(shop_item_3, (950, 950))
+        screen.blit(shop_item_4, (1500, 950))
+
         if pygame.key.get_pressed()[pygame.K_1]:
             if bananas >= multi_shot_level * 10:
                 bananas -= multi_shot_level * 10
@@ -73,6 +78,8 @@ def shop(open):
                 bananas -= 25 + more_spawns_counter * 5
                 more_spawns_counter += 1
                 more_spawns = 30 + more_spawns_counter * 5
+    else:
+        fps = 75
 
 
 def spawn_asteroids():
@@ -86,7 +93,7 @@ def spawn_asteroids():
         asteroids.append(
             ExplosiveAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
     elif rand == 3:
-        asteroids.append(banana((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
+        asteroids.append(Banana((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
     # asteroids.append(ExplosiveAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
 
 
@@ -193,6 +200,9 @@ class Asteroid:
         self.destroy()
 
 
+# For the different types of Asteroids I extended the Asteroid class
+# This is so I can still iterate over them
+# and use the same methods for all of them
 class ExplosiveAsteroid(Asteroid):
     def __init__(self, position):
         super().__init__(position)
@@ -240,7 +250,7 @@ class ReflectiveAsteroid(Asteroid):
         super().destroy()
 
 
-class banana(Asteroid):
+class Banana(Asteroid):
     def __init__(self, position):
         super().__init__(position)
         self.image = pygame.image.load('assets/banana.png')
@@ -249,9 +259,11 @@ class banana(Asteroid):
 
     def collide(self):
         global bananas
+        global score
         if double_time > (double_time_secs / 2) * fps:
             bananas += 5
         bananas += 5
+        score += 1
         super().destroy()
 
 
@@ -267,12 +279,13 @@ clock = pygame.time.Clock()
 
 game_over = False  # Variables
 shop_open = False
+fps = 75
+spawn_timer = 3 * fps
 ship = Ship((100, 100))
 asteroids = []
 out_of_bounds = [-150, -150, screen.get_width() + 150, screen.get_height() + 150]
 old_keys_pressed = pygame.key.get_pressed()
 font = pygame.font.SysFont('comicsans', 30, True)
-fps = 75
 
 for i in range(35):  # Initialize the asteroids
     spawn_asteroids()
@@ -320,16 +333,24 @@ while not game_over:
                 a.position2) < 128 and invulnerable_ticks == 0:
             a.collide()
 
+    # These all tick down every frame
+    # So every second it will go down by the number of frames
     if invulnerable_ticks > 0:
         invulnerable_ticks -= 1
     if double_time > 0:
         double_time -= 1
-    if health == 0:
-        game_over = True
     if more_spawns > 0:
         spawn_asteroids()
         more_spawns -= 1
-        invulnerable_ticks = fps
+        invulnerable_ticks = fps  # Gives a second of invulnerability after spawning
+    if spawn_timer > 0:  # Spawns a new asteroid every 3 seconds
+        spawn_timer -= 1
+    else:
+        spawn_asteroids()
+        spawn_timer = 3 * fps
+
+    if health == 0:
+        game_over = True
 
     score_text = font.render('Score: ' + str(score), True, (255, 255, 255))
     banana_text = font.render('Bananas: ' + str(bananas), True, (255, 255, 255))
@@ -350,5 +371,35 @@ while not game_over:
 
     shop(shop_open)
     pygame.display.update()
+# —--------------------------------------
+# After game code
+highscores = []  # Variables needed for high score saving
+highscores2 = []
+last_index = -1
+
+with open('highscore.txt', 'r') as f:  # Reads the high score file
+    for x in f:
+        highscores.append(x.replace('\n',
+                                    ''))  # This replace is to remove the newline character. so that it is an int instead of a string
+
+for i in highscores:  # Loops over the high score array
+    if last_index != -1:  # If the score is higher than one in the array this loop will be called
+        highscores.insert(last_index, score)  # Inserts your score into the array
+        break  # Breaks the loop
+    elif score >= int(i):  # If the score is higher than one of the current high scores
+        last_index = highscores.index(i)  # Sets last index so the above if statement can run
+
+for i in range(5):  # This is just so only the top 5 scores are saved
+    highscores2.append(highscores[i])
+
+with open('highscore.txt', 'w') as f:  # Saves the file with the new high scores
+    for x in highscores2:
+        f.write(str(x) + '\n')
+
+if last_index != -1:  # Checks if you made the leaderboard
+    print(f"Your score was {score}, you placed #{last_index + 1} on the leaderboard")
+else:
+    print(f"Your score was {score}, you didnt make it on to the leaderboard")
+    print("Better luck next time")
 print("Game Over")
 pygame.quit()
