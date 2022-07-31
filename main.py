@@ -17,11 +17,11 @@ double_time = 0
 double_time_secs = 30
 # This is double the time its meant to run for
 # This is due to the shop only restocking it after 2x the run time
+more_spawns = 0
+more_spawns_counter = 0
 
 # —--------------------------------------
 # Functions
-more_spawns = 0
-more_spawns_counter = 0
 
 
 def wrap_position(position, screen):
@@ -61,19 +61,19 @@ def shop(open):
             screen.blit(shop_item_3, (950, 950))
         screen.blit(shop_item_4, (1500, 950))
 
-        if pygame.key.get_pressed()[pygame.K_1]:
+        if pygame.key.get_pressed()[pygame.K_1] and not old_keys_pressed[pygame.K_1]:
             if bananas >= multi_shot_level * 10:
                 bananas -= multi_shot_level * 10
                 multi_shot_level += 1
-        if pygame.key.get_pressed()[pygame.K_2]:
+        if pygame.key.get_pressed()[pygame.K_2] and not old_keys_pressed[pygame.K_2]:
             if bananas >= 7 and turning_rate == 1:
                 bananas -= 7
                 turning_rate += 1.5
-        if pygame.key.get_pressed()[pygame.K_3]:
+        if pygame.key.get_pressed()[pygame.K_3] and not old_keys_pressed[pygame.K_3]:
             if bananas >= 20 and double_time == 0:
                 bananas -= 20
                 double_time = double_time_secs * fps
-        if pygame.key.get_pressed()[pygame.K_4]:
+        if pygame.key.get_pressed()[pygame.K_4] and not old_keys_pressed[pygame.K_4]:
             if bananas >= 25 + more_spawns_counter * 5:
                 bananas -= 25 + more_spawns_counter * 5
                 more_spawns_counter += 1
@@ -302,7 +302,7 @@ class RedPortalAsteroid(PortalAsteroid):
             if a.id == self.id and a.type == "blue_portal":
                 ship.position = a.position
                 a.destroy()
-                self.destroy()
+        self.destroy()
 
     def spawn(self):  # Prevent infinite loop
         pass
@@ -321,7 +321,7 @@ class BluePortalAsteroid(PortalAsteroid):
             if a.id == self.id and a.type == "red_portal":
                 ship.position = a.position
                 a.destroy()
-                self.destroy()
+        self.destroy()
 
     def spawn(self):
         pass
@@ -347,7 +347,7 @@ out_of_bounds = [-150, -150, screen.get_width() + 150, screen.get_height() + 150
 old_keys_pressed = pygame.key.get_pressed()
 font = pygame.font.SysFont('comicsans', 30, True)
 
-for i in range(35):  # Initialize the asteroids
+for i in range(30):  # Initialize the asteroids
     pass
     spawn_asteroids()
 
@@ -437,9 +437,9 @@ while not game_over:
     keys_pressed = pygame.key.get_pressed()
     if keys_pressed[pygame.K_e] and not old_keys_pressed[pygame.K_e]:
         shop_open = not shop_open
+    shop(shop_open)
     old_keys_pressed = pygame.key.get_pressed()
 
-    shop(shop_open)
     pygame.display.update()
 # —--------------------------------------
 # After game code
