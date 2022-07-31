@@ -83,7 +83,7 @@ def shop(open):
 
 
 def spawn_asteroids():
-    rand = random.randint(0, 3)
+    rand = random.randint(0, 4)
     if rand == 0:
         asteroids.append(
             ReflectiveAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
@@ -94,6 +94,10 @@ def spawn_asteroids():
             ExplosiveAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
     elif rand == 3:
         asteroids.append(Banana((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
+    elif rand == 4:
+        if random.randint(0, 1) == 0:
+            asteroids.append(
+                PortalAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
     # asteroids.append(ExplosiveAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
 
 
@@ -127,6 +131,7 @@ class Ship:
         if is_key_pressed[pygame.K_SPACE] and self.can_shoot == 0:
             for i in range(multi_shot_level):
                 self.bullets.append(Bullet(Vector2(self.position), self.forward * 10))
+                # self.bullets.append(Bullet(Vector2(self.position), -self.forward * 10))
             self.can_shoot = 500
         self.position += self.drift
         if self.can_shoot > 0:
@@ -163,7 +168,6 @@ class Bullet:
 
 
 # Classes for the types of Asteroids
-
 class Asteroid:
     def __init__(self, position):
         self.position = Vector2(position)
@@ -267,6 +271,62 @@ class Banana(Asteroid):
         super().destroy()
 
 
+class PortalAsteroid(Asteroid):
+    def __init__(self, position):
+        super().__init__(position)
+        self.image = pygame.image.load('assets/lunar.png')
+        self.image = pygame.transform.scale(self.image, (0, 0))
+        self.type = "portal"
+        self.spawn()
+
+    def spawn(self):
+        global asteroids
+        asteroids.append(RedPortalAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height())), self.id + 1))
+        asteroids.append(BluePortalAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height())), self.id + 1))
+        self.destroy()
+
+    def collide(self):
+        pass
+
+
+class RedPortalAsteroid(PortalAsteroid):
+    def __init__(self, position, id):
+        super().__init__(position)
+        self.image = pygame.image.load('assets/red_portal.png')
+        self.image = pygame.transform.scale(self.image, (128, 128))
+        self.type = "red_portal"
+        self.id = id
+
+    def collide(self):
+        for a in asteroids:
+            if a.id == self.id and a.type == "blue_portal":
+                ship.position = a.position
+                a.destroy()
+                self.destroy()
+
+    def spawn(self):  # Prevent infinite loop
+        pass
+
+
+class BluePortalAsteroid(PortalAsteroid):
+    def __init__(self, position, id):
+        super().__init__(position)
+        self.image = pygame.image.load('assets/blue_portal.png')
+        self.image = pygame.transform.scale(self.image, (128, 128))
+        self.type = "blue_portal"
+        self.id = id
+
+    def collide(self):
+        for a in asteroids:
+            if a.id == self.id and a.type == "red_portal":
+                ship.position = a.position
+                a.destroy()
+                self.destroy()
+
+    def spawn(self):
+        pass
+
+
 # —--------------------------------------
 # Initialization
 
@@ -288,11 +348,11 @@ old_keys_pressed = pygame.key.get_pressed()
 font = pygame.font.SysFont('comicsans', 30, True)
 
 for i in range(35):  # Initialize the asteroids
+    pass
     spawn_asteroids()
 
 # —--------------------------------------
 # Main game loop
-
 
 while not game_over:
     clock.tick(fps)
@@ -322,11 +382,15 @@ while not game_over:
                 a.destroy()
                 if a.type != "reflect":
                     ship.bullets.remove(b)
-                break
         if (time.time() - b.time_spawned) > 3:
             ship.bullets.remove(b)
 
+    asteroid_count = 0
     for a in asteroids:
+        if a.type == "portal":
+            a.destroy()
+        if a.type != "red_portal":
+            asteroid_count += 1
         a.update()
         a.draw(screen)
         if ship.position.distance_to(a.position) < 128 and ship.position.distance_to(
@@ -352,15 +416,21 @@ while not game_over:
     if health == 0:
         game_over = True
 
+    if asteroid_count < 5:
+        for i in range(5):
+            spawn_asteroids()
+
     score_text = font.render('Score: ' + str(score), True, (255, 255, 255))
     banana_text = font.render('Bananas: ' + str(bananas), True, (255, 255, 255))
     health_text = font.render('Health: ' + str(health), True, (255, 255, 255))
+    asteroid_count_text = font.render('Asteroids: ' + str(asteroid_count), True, (255, 255, 255))
     black = pygame.image.load('assets/black.png')
-    black = pygame.transform.scale(black, (400, 50))
+    black = pygame.transform.scale(black, (600, 50))
     screen.blit(black, (0, 0))
     screen.blit(score_text, (10, 10))
     screen.blit(banana_text, (140, 10))
-    screen.blit(health_text, (290, 10))
+    screen.blit(health_text, (300, 10))
+    screen.blit(asteroid_count_text, (430, 10))
 
     # Here we are checking if the player has pressed a key that wasn't pressed before last cycle
     # This lets us toggle the shop once instead of it being toggled every cycle
