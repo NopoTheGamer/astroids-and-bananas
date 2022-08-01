@@ -20,6 +20,7 @@ double_time_secs = 30
 more_spawns = 0
 more_spawns_counter = 0
 
+
 # —--------------------------------------
 # Functions
 
@@ -39,6 +40,7 @@ def shop(open):
     global more_spawns_counter
     global more_spawns
     global fps
+    global shop_open
     if open:
         fps = 55  # This slows down the game a tad, so you have more time to think in the shop
         black = pygame.image.load('assets/black.png')
@@ -72,7 +74,9 @@ def shop(open):
         if pygame.key.get_pressed()[pygame.K_3] and not old_keys_pressed[pygame.K_3]:
             if bananas >= 20 and double_time == 0:
                 bananas -= 20
+                fps = 75
                 double_time = double_time_secs * fps
+                shop_open = False
         if pygame.key.get_pressed()[pygame.K_4] and not old_keys_pressed[pygame.K_4]:
             if bananas >= 25 + more_spawns_counter * 5:
                 bananas -= 25 + more_spawns_counter * 5
@@ -281,8 +285,12 @@ class PortalAsteroid(Asteroid):
 
     def spawn(self):
         global asteroids
-        asteroids.append(RedPortalAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height())), self.id + 1))
-        asteroids.append(BluePortalAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height())), self.id + 1))
+        asteroids.append(
+            RedPortalAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height())),
+                              self.id + 1))
+        asteroids.append(
+            BluePortalAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height())),
+                               self.id + 1))
         self.destroy()
 
     def collide(self):
@@ -382,6 +390,7 @@ while not game_over:
                 a.destroy()
                 if a.type != "reflect":
                     ship.bullets.remove(b)
+                    break
         if (time.time() - b.time_spawned) > 3:
             ship.bullets.remove(b)
 
