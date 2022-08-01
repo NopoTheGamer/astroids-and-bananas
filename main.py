@@ -84,6 +84,8 @@ def shop(open):
                 more_spawns = 30 + more_spawns_counter * 5
     else:
         fps = 75
+        open_shop_text = font.render(f'(E) To open shop', True, (255, 255, 255))
+        screen.blit(open_shop_text, (10, 950))
 
 
 def spawn_asteroids():
