@@ -227,9 +227,7 @@ class Asteroid:
         screen.blit(self.image, self.position)
 
     def destroy(self):
-        for a in asteroids:
-            if a.id == self.id:
-                asteroids.remove(a)
+        asteroids.remove(self)
 
     def collide(self):
         global health
