@@ -105,6 +105,37 @@ def spawn_asteroids():
     # asteroids.append(ExplosiveAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
 
 
+def show_highscores():
+    highscores = []  # Variables needed for high score saving
+    highscores2 = []
+    last_index = -1
+
+    with open('highscore.txt', 'r') as f:  # Reads the high score file
+        for x in f:  # This replace is to remove the newline character. so that it is an int instead of a string
+            highscores.append(x.replace('\n', ''))
+
+    for i in highscores:  # Loops over the high score array
+        if last_index != -1:  # If the score is higher than one in the array this loop will be called
+            highscores.insert(last_index, score)  # Inserts your score into the array
+            break  # Breaks the loop
+        elif score >= int(i):  # If the score is higher than one of the current high scores
+            last_index = highscores.index(i)  # Sets last index so the above if statement can run
+
+    # TODO: This is broken
+    for i in range(5):  # This is just so only the top 5 scores are saved
+        highscores2.append(highscores[i])
+
+    with open('highscore.txt', 'w') as f:  # Saves the file with the new high scores
+        for x in highscores:
+            f.write(str(x) + '\n')
+
+    if last_index != -1:  # Checks if you made the leaderboard
+        print(f"Your score was {score}, you placed #{last_index + 1} on the leaderboard")
+    else:
+        print(f"Your score was {score}, you didnt make it on to the leaderboard")
+        print("Better luck next time")
+
+
 # —--------------------------------------
 # Classes
 
@@ -452,33 +483,7 @@ while not game_over:
     pygame.display.update()
 # —--------------------------------------
 # After game code
-highscores = []  # Variables needed for high score saving
-highscores2 = []
-last_index = -1
+show_highscores()
 
-with open('highscore.txt', 'r') as f:  # Reads the high score file
-    for x in f:
-        highscores.append(x.replace('\n',
-                                    ''))  # This replace is to remove the newline character. so that it is an int instead of a string
-
-for i in highscores:  # Loops over the high score array
-    if last_index != -1:  # If the score is higher than one in the array this loop will be called
-        highscores.insert(last_index, score)  # Inserts your score into the array
-        break  # Breaks the loop
-    elif score >= int(i):  # If the score is higher than one of the current high scores
-        last_index = highscores.index(i)  # Sets last index so the above if statement can run
-
-for i in range(5):  # This is just so only the top 5 scores are saved
-    highscores2.append(highscores[i])
-
-with open('highscore.txt', 'w') as f:  # Saves the file with the new high scores
-    for x in highscores2:
-        f.write(str(x) + '\n')
-
-if last_index != -1:  # Checks if you made the leaderboard
-    print(f"Your score was {score}, you placed #{last_index + 1} on the leaderboard")
-else:
-    print(f"Your score was {score}, you didnt make it on to the leaderboard")
-    print("Better luck next time")
 print("Game Over")
 pygame.quit()
