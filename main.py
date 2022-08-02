@@ -17,7 +17,7 @@ double_time = 0
 double_time_secs = 30
 # This is double the time its meant to run for
 # This is due to the shop only restocking it after 2x the run time
-more_spawns = 0
+more_spawns = 30  # This is set to 30 at the start so when the game starts it will spawn 30 asteroids
 more_spawns_counter = 0
 
 
@@ -380,6 +380,8 @@ clock = pygame.time.Clock()
 
 game_over = False  # Variables
 shop_open = False
+starting_menu = True
+dont_shoot = False
 fps = 75
 spawn_timer = 3 * fps
 ship = Ship((100, 100))
@@ -388,9 +390,6 @@ out_of_bounds = [-150, -150, screen.get_width() + 150, screen.get_height() + 150
 old_keys_pressed = pygame.key.get_pressed()
 font = pygame.font.SysFont('comicsans', 30, True)
 
-for i in range(30):  # Initialize the asteroids
-    pass
-    spawn_asteroids()
 
 # —--------------------------------------
 # Main game loop
@@ -400,6 +399,24 @@ while not game_over:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game_over = True
+
+    if pygame.key.get_pressed()[pygame.K_SPACE]:
+        starting_menu = False
+    if starting_menu:
+        menu_text = font.render('Press SPACE to start', False, (255, 255, 255))
+        menu_text2 = font.render('Use WASD to move', False, (255, 255, 255))
+        menu_text3 = font.render('Use SPACE to shoot', False, (255, 255, 255))
+        menu_text4 = font.render('Use E To open the shop', False, (255, 255, 255))
+        menu_text5 = font.render('Click the numbers in the shop to buy said item', False, (255, 255, 255))
+        menu_text6 = font.render('The game also runs slower while the shop is open', False, (255, 255, 255))
+        screen.blit(menu_text, (screen.get_width() / 2 - 220, screen.get_height() / 2 + 350))
+        screen.blit(menu_text2, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 400))
+        screen.blit(menu_text3, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 350))
+        screen.blit(menu_text4, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 300))
+        screen.blit(menu_text5, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 250))
+        screen.blit(menu_text6, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 200))
+        pygame.display.update()
+        continue
     screen.blit(background, (0, 0))
 
     ship.update()
@@ -449,6 +466,7 @@ while not game_over:
         spawn_asteroids()
         more_spawns -= 1
         invulnerable_ticks = fps  # Gives a second of invulnerability after spawning
+
     if spawn_timer > 0:  # Spawns a new asteroid every 3 seconds
         spawn_timer -= 1
     else:
