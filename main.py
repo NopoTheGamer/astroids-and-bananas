@@ -390,7 +390,12 @@ out_of_bounds = [-150, -150, screen.get_width() + 150, screen.get_height() + 150
 old_keys_pressed = pygame.key.get_pressed()
 font = pygame.font.SysFont('comicsans', 30, True)
 
-
+asteroids.append(Asteroid((screen.get_width() / 2 - 0, screen.get_height() / 2 - 380)))
+asteroids.append(ReflectiveAsteroid((screen.get_width() / 2 - 0, screen.get_height() / 2 - 230)))
+asteroids.append(ExplosiveAsteroid((screen.get_width() / 2 - 0, screen.get_height() / 2 - 100)))
+asteroids.append(RedPortalAsteroid((screen.get_width() / 2 - 0, screen.get_height() / 2 + 20), 0))
+asteroids.append(BluePortalAsteroid((screen.get_width() / 2 - 135, screen.get_height() / 2 + 20), 0))
+asteroids.append(Banana((screen.get_width() / 2 - 0, screen.get_height() / 2 + 150)))
 # —--------------------------------------
 # Main game loop
 
@@ -403,18 +408,35 @@ while not game_over:
     if pygame.key.get_pressed()[pygame.K_SPACE]:
         starting_menu = False
     if starting_menu:
+        welcome_text = font.render("Welcome to Asteroids and Bananas", False, (255, 255, 255))
         menu_text = font.render('Press SPACE to start', False, (255, 255, 255))
         menu_text2 = font.render('Use WASD to move', False, (255, 255, 255))
         menu_text3 = font.render('Use SPACE to shoot', False, (255, 255, 255))
         menu_text4 = font.render('Use E To open the shop', False, (255, 255, 255))
         menu_text5 = font.render('Click the numbers in the shop to buy said item', False, (255, 255, 255))
         menu_text6 = font.render('The game also runs slower while the shop is open', False, (255, 255, 255))
+        menu_text7 = font.render('Asteroid types:', False, (255, 255, 255))
+        default_asteroid = font.render('Default asteroid: Does nothing cool', False, (255, 255, 255))
+        reflective_asteroid = font.render('Reflective asteroid: Bounces bullets in a random direction', False, (255, 255, 255))
+        explosive_asteroid = font.render('Explosive asteroid: Destroys nearby asteroids when shot', False, (255, 255, 255))
+        portal_asteroid = font.render('Portal asteroid: Has a chance to teleport you to the other portal', False, (255, 255, 255))
+        banana_asteroid = font.render('Banana: Gives you 5 bananas on collision', False, (255, 255, 255))
         screen.blit(menu_text, (screen.get_width() / 2 - 220, screen.get_height() / 2 + 350))
         screen.blit(menu_text2, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 400))
         screen.blit(menu_text3, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 350))
         screen.blit(menu_text4, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 300))
         screen.blit(menu_text5, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 250))
         screen.blit(menu_text6, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 200))
+        screen.blit(menu_text7, (screen.get_width() / 2 - 0, screen.get_height() / 2 - 400))
+        screen.blit(default_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 - 370))
+        screen.blit(reflective_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 - 220))
+        screen.blit(explosive_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 - 90))
+        screen.blit(portal_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 + 20))
+        screen.blit(banana_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 + 160))
+        screen.blit(welcome_text, (screen.get_width() / 2 - 220, screen.get_height() / 2 - 450))
+        for a in asteroids:
+            a.draw(screen)
+            print(a.position)
         pygame.display.update()
         continue
     screen.blit(background, (0, 0))
