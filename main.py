@@ -11,7 +11,7 @@ multi_shot_level = 1
 turning_rate = 1
 score = 0
 bananas = 0
-health = 0
+health = 3
 invulnerable_ticks = 75  # So you don't die in the first second
 double_time = 0
 double_time_secs = 30
@@ -20,33 +20,32 @@ double_time_secs = 30
 more_spawns = 30  # This is set to 30 at the start so when the game starts it will spawn 30 asteroids
 more_spawns_counter = 0
 save_highscores = True
+ass_shots = False
 
 
 # —--------------------------------------
 # Functions
 
 
-def wrap_position(position, screen):
+def wrap_position(position, screen):  # This function is word for word ripped from the Google Classroom
     x, y = position  # where are we
     w, h = screen.get_size()  # how big is the screen
     return Vector2(x % w, y % h)  # x mod width (division) // y mod height (division)
     # mod is dividing and gives you the leftover amount, so now update it elsewhere
+    # From my understanding it will return something like a percentage of how far along you are on the screen
+    # So when you go past the edge of the screen it overflows and your "1% of the next screen"
+    # But because we don't have a next screen we just go back to the start of the screen
 
 
 def shop(open):
-    global multi_shot_level
-    global turning_rate
-    global bananas
-    global double_time
-    global more_spawns_counter
-    global more_spawns
-    global fps
-    global shop_open
+    # I have decided to go with long global statements as I think its just nicer
+    global multi_shot_level, turning_rate, bananas, double_time, more_spawns_counter, more_spawns, fps, shop_open, ass_shots
     if open:
         fps = 55  # This slows down the game a tad, so you have more time to think in the shop
         black = pygame.image.load('assets/black.png')
         black = pygame.transform.scale(black, (8000, 600))
-        screen.blit(black, (0, 920))
+        screen.blit(black, (0, 900))
+        # The shop is pretty simple, just some text and if you input a button it will change the value of the variable
         shop_item_1 = font.render(
             f'(1) Multi Hit Lvl:{multi_shot_level} Costs {multi_shot_level * 10} bananas', True, (255, 255, 255))
         if turning_rate == 1:
@@ -56,14 +55,18 @@ def shop(open):
             f'(3) Double Bananas for 15s Costs {20} bananas', True, (255, 255, 255))
         shop_item_4 = font.render(
             f'(4) Spawn Next Wave Costs {25 + more_spawns_counter * 5} bananas', True, (255, 255, 255))
+        shop_item_5 = font.render(
+            f'(5) You can now shoot from your backside Costs {50} bananas', True, (255, 255, 255))
 
-        screen.blit(shop_item_1, (10, 950))
+        screen.blit(shop_item_1, (screen.get_width() - 1870, screen.get_height() - 80))
         if turning_rate == 1:
-            screen.blit(shop_item_2, (470, 950))
+            screen.blit(shop_item_2, (screen.get_width() - 1870, screen.get_height() - 50))
         if double_time == 0:
-            screen.blit(shop_item_3, (950, 950))
-        screen.blit(shop_item_4, (1500, 950))
-
+            screen.blit(shop_item_3, (screen.get_width() - 1420, screen.get_height() - 80))
+        screen.blit(shop_item_4, (screen.get_width() - 1380, screen.get_height() - 50))
+        if not ass_shots:
+            screen.blit(shop_item_5, (screen.get_width() - 870, screen.get_height() - 80))
+        # We do the old_ket_pressed thing here so that the player doesn't buy an upgrade more than once per click
         if pygame.key.get_pressed()[pygame.K_1] and not old_keys_pressed[pygame.K_1]:
             if bananas >= multi_shot_level * 10:
                 bananas -= multi_shot_level * 10
@@ -75,7 +78,7 @@ def shop(open):
         if pygame.key.get_pressed()[pygame.K_3] and not old_keys_pressed[pygame.K_3]:
             if bananas >= 20 and double_time == 0:
                 bananas -= 20
-                fps = 75
+                fps = 75  # I close the shop here otherwise you don't get the correct amount of time from this upgrade
                 double_time = double_time_secs * fps
                 shop_open = False
         if pygame.key.get_pressed()[pygame.K_4] and not old_keys_pressed[pygame.K_4]:
@@ -83,6 +86,10 @@ def shop(open):
                 bananas -= 25 + more_spawns_counter * 5
                 more_spawns_counter += 1
                 more_spawns = 30 + more_spawns_counter * 5
+        if pygame.key.get_pressed()[pygame.K_5] and not old_keys_pressed[pygame.K_5]:
+            if bananas >= 50 and not ass_shots:
+                bananas -= 50
+                ass_shots = True
     else:
         fps = 75
         open_shop_text = font.render(f'(E) To open shop', True, (255, 255, 255))
@@ -101,11 +108,10 @@ def spawn_asteroids():
             ExplosiveAsteroid((random.randint(100, screen.get_width()), random.randint(0, screen.get_height()))))
     elif rand == 3:
         asteroids.append(Banana((random.randint(100, screen.get_width()), random.randint(0, screen.get_height()))))
-    elif rand == 4:
+    elif rand == 4:  # I thought there were too many portal asteroids, so I made them only 50% due to the fact it spawns 2 portals
         if random.randint(0, 1) == 0:
             asteroids.append(
                 PortalAsteroid((random.randint(100, screen.get_width()), random.randint(0, screen.get_height()))))
-    # asteroids.append(ExplosiveAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
 
 
 def show_highscores(save):
@@ -130,13 +136,18 @@ def show_highscores(save):
                 f.write(str(x) + '\n')
 
     for i in range(len(highscores)-1):
-        highscores_str.append(font.render(f'#{i+1}: {highscores[i]}', True, (255, 255, 255)))  # Renders the high scores as text
-        screen.blit(highscores_str[i], (screen.get_width() / 2 - 220, screen.get_height() / 2 - 360 + i * 50))  # Blits the high scores to the screen
+        highscores_str.append(font.render(f'#{i+1}: {highscores[i]}', True, (255, 255, 255)))  # Puts the high scores in an array
+        screen.blit(highscores_str[i], (screen.get_width() / 2 - 220, screen.get_height() / 2 - 360 + i * 50))  # Accesses this array and puts it on the screen
     if last_index != -1:  # Checks if you made the leaderboard
         score_text = font.render(f"Your score was {score}, you placed #{last_index + 1} on the leaderboard", False, (255, 255, 255))
     else:
+        # Pretty sure you only don't get the leaderboard if you get less than the bottom score
         score_text = font.render(f"Your score was {score}, you didnt make it on to the leaderboard", False, (255, 255, 255))
+    death_text = font.render("You died", False, (255, 255, 255))
+    restart_text = font.render('Press SPACE to restart', False, (255, 255, 255))
     screen.blit(score_text, (screen.get_width() / 2 - 420, screen.get_height() / 2 - 400))
+    screen.blit(death_text, (screen.get_width() / 2 - 220, screen.get_height() / 2 - 450))
+    screen.blit(restart_text, (screen.get_width() / 2 - 220, screen.get_height() / 2 + 350))
 
 
 def starting_screen():
@@ -168,22 +179,20 @@ def starting_screen():
     screen.blit(portal_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 + 20))
     screen.blit(banana_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 + 160))
     screen.blit(welcome_text, (screen.get_width() / 2 - 220, screen.get_height() / 2 - 450))
-    for a in asteroids:
+    for a in asteroids:  # I use real asteroids on the starting screen
         a.draw(screen)
     pygame.display.update()
 
 
 def death_screen():
     global save_highscores
-    death_text = font.render("You died", False, (255, 255, 255))
-    screen.blit(death_text, (screen.get_width() / 2 - 220, screen.get_height() / 2 - 450))
     show_highscores(save_highscores)
-    save_highscores = False
+    save_highscores = False  # This is used so the file isn't written too 75 times a second
     pygame.display.update()
 
 
 def reset_game():
-    global multi_shot_level, turning_rate, score, bananas, health, invulnerable_ticks, double_time, double_time_secs, more_spawns, more_spawns_counter, save_highscores, game_over, shop_open, dont_shoot, fps, spawn_timer, ship, asteroids, death_time
+    global multi_shot_level, turning_rate, score, bananas, health, invulnerable_ticks, double_time, double_time_secs, more_spawns, more_spawns_counter, save_highscores, game_over, shop_open, dont_shoot, fps, spawn_timer, ship, asteroids, death_time, ass_shots
     multi_shot_level = 1
     turning_rate = 1
     score = 0
@@ -203,6 +212,7 @@ def reset_game():
     ship = Ship((100, 100))
     asteroids = []
     death_time = 50
+    ass_shots = False
 
 
 # —--------------------------------------
@@ -210,6 +220,7 @@ def reset_game():
 
 
 class Ship:
+    # Alot of this ship code is the same as the classroom one
     def __init__(self, position):
         self.position = Vector2(position)
         self.image = pygame.image.load('assets/ship.png')
@@ -235,7 +246,8 @@ class Ship:
         if is_key_pressed[pygame.K_SPACE] and self.can_shoot == 0:
             for i in range(multi_shot_level):
                 self.bullets.append(Bullet(Vector2(self.position), self.forward * 10))
-                # self.bullets.append(Bullet(Vector2(self.position), -self.forward * 10))
+                if ass_shots:
+                    self.bullets.append(Bullet(Vector2(self.position), -self.forward * 10))
             self.can_shoot = 500
         self.position += self.drift
         if self.can_shoot > 0:
@@ -279,8 +291,8 @@ class Asteroid:
         self.velocity = Vector2(random.randint(-3, 3), random.randint(-3, 3)) / 2
         self.image = pygame.image.load('assets/lunar.png')
         self.image = pygame.transform.scale(self.image, (128, 128))
-        self.id = random.randint(0, 10000)  # if the id's collide, that's "intended"
-        self.type = "default"
+        self.id = random.randint(0, 10000)  # If the id's collide, that's "intended"
+        self.type = "default"  # The type is used for reflective and portal asteroids
 
     def update(self):
         self.position += self.velocity
@@ -301,8 +313,7 @@ class Asteroid:
                 asteroids.remove(a)
 
     def collide(self):
-        global health
-        global invulnerable_ticks
+        global health, invulnerable_ticks
         health -= 1
         invulnerable_ticks = fps
         self.destroy()
@@ -322,9 +333,9 @@ class ExplosiveAsteroid(Asteroid):
         self.type = "explosive"
 
     def destroy(self):
-        global score
-        global bananas
+        global score, bananas
         for a in asteroids:
+            # The collision check is scuffed but like it works well enough ¯\_(ツ)_/¯
             if a.position.distance_to(self.position) < 200 and a.position2.distance_to(
                     self.position) < 200 and self.id != a.id:
                 if double_time > (double_time_secs / 2) * fps:
@@ -335,9 +346,6 @@ class ExplosiveAsteroid(Asteroid):
                 a.destroy()
             if self.id == a.id:
                 asteroids.remove(a)
-
-    def explode(self):
-        screen.blit(self.boom, self.position)
 
 
 class ReflectiveAsteroid(Asteroid):
@@ -366,8 +374,7 @@ class Banana(Asteroid):
         self.type = "banana"
 
     def collide(self):
-        global bananas
-        global score
+        global bananas, score
         if double_time > (double_time_secs / 2) * fps:
             bananas += 5
         bananas += 5
@@ -378,13 +385,12 @@ class Banana(Asteroid):
 class PortalAsteroid(Asteroid):
     def __init__(self, position):
         super().__init__(position)
-        self.image = pygame.image.load('assets/lunar.png')
-        self.image = pygame.transform.scale(self.image, (0, 0))
         self.type = "portal"
         self.spawn()
 
     def spawn(self):
         global asteroids
+        # These have id+1 so they don't have the same id as this dummy asteroid
         asteroids.append(
             RedPortalAsteroid((random.randint(100, screen.get_width()), random.randint(0, screen.get_height())),
                               self.id + 1))
@@ -441,7 +447,7 @@ class BluePortalAsteroid(PortalAsteroid):
 
 pygame.init()  # Pygame initialization
 pygame.display.set_caption("Asteroids and Bananas")
-background = pygame.image.load('assets/space_aw1.png')
+background = pygame.image.load('assets/space_aw1.png')  # This is my desktop background lol
 screen = pygame.display.set_mode((1880, 1000))
 clock = pygame.time.Clock()
 
@@ -455,9 +461,15 @@ ship = Ship((100, 100))
 asteroids = []
 out_of_bounds = [-150, -150, screen.get_width() + 150, screen.get_height() + 150]
 old_keys_pressed = pygame.key.get_pressed()
-font = pygame.font.SysFont('comicsans', 30, True)
-death_time = 50
+pop_sound = pygame.mixer.Sound("assets/pop_.mp3")
+pygame.mixer.music.load('assets/background_music.mp3')
+pygame.mixer.music.play(-1)
+# So when I was first working on this the font name I had was invalid
+# And now im am too lazy too fix sizing issues so you will have to deal with the default font
+font = pygame.font.SysFont('something that doesnt exist (I would hope)', 30, True)
+death_time = 50  # So you have just under a second before you can click space again to respawn after you die
 
+# These asteroids are the ones shown on the starting screen
 asteroids.append(Asteroid((screen.get_width() / 2 - 0, screen.get_height() / 2 - 380)))
 asteroids.append(ReflectiveAsteroid((screen.get_width() / 2 - 0, screen.get_height() / 2 - 230)))
 asteroids.append(ExplosiveAsteroid((screen.get_width() / 2 - 0, screen.get_height() / 2 - 100)))
@@ -477,8 +489,8 @@ while not game_over:
         starting_menu = False
     if starting_menu:
         starting_screen()
-        continue
-    death_time -= 1
+        continue  # Continue is a keyword that tells python to skip the rest of the code in this loop
+    death_time -= 1  # This will go down by 1 per loop but if the game isn't over it also resets to 50 every loop
     if health <= 0:
         death_screen()
         if pygame.key.get_pressed()[pygame.K_SPACE] and death_time <= 0:
@@ -486,6 +498,7 @@ while not game_over:
         continue
     screen.blit(background, (0, 0))
     death_time = 50
+
     ship.update()
     ship.draw(screen)
 
@@ -496,22 +509,23 @@ while not game_over:
                 or b.get_pos().y > out_of_bounds[3] \
                 or b.get_pos().x < out_of_bounds[0] \
                 or b.get_pos().x > out_of_bounds[2]:
-            ship.bullets.remove(b)
+            ship.bullets.remove(b)  # I added oob checks to the bullets
             break
         for a in asteroids:
             if b.get_pos().distance_to(a.position) < 128 and b.get_pos().distance_to(a.position2) < 128:
                 score += 1
+                pygame.mixer.Sound.play(pop_sound)
                 if double_time > (double_time_secs / 2) * fps:
                     bananas += 1
                 bananas += 1
                 a.destroy()
-                if a.type != "reflect":
+                if a.type != "reflect":  # Reflective asteroids send them in a random direction instead
                     ship.bullets.remove(b)
                     break
-        if (time.time() - b.time_spawned) > 3:
-            ship.bullets.remove(b)
+        if (time.time() - b.time_spawned) > 3:  # If the bullet is alive for too long it despawns
+            ship.bullets.remove(b)  # Because it can get 0,0 vel and I didn't want them to just be stuck
 
-    asteroid_count = 0
+    asteroid_count = 0  # Used for stats at the top, as well as spawning more when you are low on asteroids
     for a in asteroids:
         if a.type == "portal":
             a.destroy()
@@ -540,11 +554,8 @@ while not game_over:
         spawn_asteroids()
         spawn_timer = 3 * fps
 
-    #if health == 0:
-    #   game_over = True
-
-    if asteroid_count < 5:
-        for i in range(5):
+    if asteroid_count < 5:  # Where's the fun if you have nothing to blow up?
+        for i in range(15):
             spawn_asteroids()
 
     score_text = font.render('Score: ' + str(score), True, (255, 255, 255))
@@ -553,11 +564,11 @@ while not game_over:
     asteroid_count_text = font.render('Asteroids: ' + str(asteroid_count), True, (255, 255, 255))
     black = pygame.image.load('assets/black.png')
     black = pygame.transform.scale(black, (600, 50))
-    screen.blit(black, (0, 0))
-    screen.blit(score_text, (10, 10))
-    screen.blit(banana_text, (140, 10))
-    screen.blit(health_text, (300, 10))
-    screen.blit(asteroid_count_text, (430, 10))
+    screen.blit(black, (screen.get_width() - screen.get_width(), screen.get_height() - screen.get_height()))
+    screen.blit(score_text, (screen.get_width() - screen.get_width() + 10, screen.get_height() - screen.get_height() + 10))
+    screen.blit(banana_text, (screen.get_width() - screen.get_width() + 140, screen.get_height() - screen.get_height() + 10))
+    screen.blit(health_text, (screen.get_width() - screen.get_width() + 300, screen.get_height() - screen.get_height() + 10))
+    screen.blit(asteroid_count_text, (screen.get_width() - screen.get_width() + 430, screen.get_height() - screen.get_height() + 10))
 
     # Here we are checking if the player has pressed a key that wasn't pressed before last cycle
     # This lets us toggle the shop once instead of it being toggled every cycle
@@ -571,6 +582,5 @@ while not game_over:
 # —--------------------------------------
 # After game code
 show_highscores(True)
-
 print("Game Over")
 pygame.quit()
