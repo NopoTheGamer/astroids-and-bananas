@@ -11,14 +11,15 @@ multi_shot_level = 1
 turning_rate = 1
 score = 0
 bananas = 0
-health = 3
-invulnerable_ticks = 0
+health = 0
+invulnerable_ticks = 75  # So you don't die in the first second
 double_time = 0
 double_time_secs = 30
 # This is double the time its meant to run for
 # This is due to the shop only restocking it after 2x the run time
 more_spawns = 30  # This is set to 30 at the start so when the game starts it will spawn 30 asteroids
 more_spawns_counter = 0
+save_highscores = True
 
 
 # —--------------------------------------
@@ -92,24 +93,24 @@ def spawn_asteroids():
     rand = random.randint(0, 4)
     if rand == 0:
         asteroids.append(
-            ReflectiveAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
+            ReflectiveAsteroid((random.randint(100, screen.get_width()), random.randint(0, screen.get_height()))))
     elif rand == 1:
-        asteroids.append(Asteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
+        asteroids.append(Asteroid((random.randint(100, screen.get_width()), random.randint(0, screen.get_height()))))
     elif rand == 2:
         asteroids.append(
-            ExplosiveAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
+            ExplosiveAsteroid((random.randint(100, screen.get_width()), random.randint(0, screen.get_height()))))
     elif rand == 3:
-        asteroids.append(Banana((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
+        asteroids.append(Banana((random.randint(100, screen.get_width()), random.randint(0, screen.get_height()))))
     elif rand == 4:
         if random.randint(0, 1) == 0:
             asteroids.append(
-                PortalAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
+                PortalAsteroid((random.randint(100, screen.get_width()), random.randint(0, screen.get_height()))))
     # asteroids.append(ExplosiveAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height()))))
 
 
-def show_highscores():
+def show_highscores(save):
     highscores = []  # Variables needed for high score saving
-    highscores2 = []
+    highscores_str = []
     last_index = -1
 
     with open('highscore.txt', 'r') as f:  # Reads the high score file
@@ -123,19 +124,85 @@ def show_highscores():
         elif score >= int(i):  # If the score is higher than one of the current high scores
             last_index = highscores.index(i)  # Sets last index so the above if statement can run
 
-    # TODO: This is broken
-    for i in range(5):  # This is just so only the top 5 scores are saved
-        highscores2.append(highscores[i])
+    if save:  # So we don't save it 75 times a second (only slightly wasteful)
+        with open('highscore.txt', 'w') as f:  # Saves the file with the new high scores
+            for x in highscores:
+                f.write(str(x) + '\n')
 
-    with open('highscore.txt', 'w') as f:  # Saves the file with the new high scores
-        for x in highscores:
-            f.write(str(x) + '\n')
-
+    for i in range(len(highscores)-1):
+        highscores_str.append(font.render(f'#{i+1}: {highscores[i]}', True, (255, 255, 255)))  # Renders the high scores as text
+        screen.blit(highscores_str[i], (screen.get_width() / 2 - 220, screen.get_height() / 2 - 360 + i * 50))  # Blits the high scores to the screen
     if last_index != -1:  # Checks if you made the leaderboard
-        print(f"Your score was {score}, you placed #{last_index + 1} on the leaderboard")
+        score_text = font.render(f"Your score was {score}, you placed #{last_index + 1} on the leaderboard", False, (255, 255, 255))
     else:
-        print(f"Your score was {score}, you didnt make it on to the leaderboard")
-        print("Better luck next time")
+        score_text = font.render(f"Your score was {score}, you didnt make it on to the leaderboard", False, (255, 255, 255))
+    screen.blit(score_text, (screen.get_width() / 2 - 420, screen.get_height() / 2 - 400))
+
+
+def starting_screen():
+    welcome_text = font.render("Welcome to Asteroids and Bananas", False, (255, 255, 255))
+    menu_text = font.render('Press SPACE to start', False, (255, 255, 255))
+    menu_text2 = font.render('Use WASD to move', False, (255, 255, 255))
+    menu_text3 = font.render('Use SPACE to shoot', False, (255, 255, 255))
+    menu_text4 = font.render('Use E To open the shop', False, (255, 255, 255))
+    menu_text5 = font.render('Click the numbers in the shop to buy said item', False, (255, 255, 255))
+    menu_text6 = font.render('The game also runs slower while the shop is open', False, (255, 255, 255))
+    menu_text7 = font.render('Asteroid types:', False, (255, 255, 255))
+    default_asteroid = font.render('Default asteroid: Does nothing cool', False, (255, 255, 255))
+    reflective_asteroid = font.render('Reflective asteroid: Bounces bullets in a random direction', False,
+                                      (255, 255, 255))
+    explosive_asteroid = font.render('Explosive asteroid: Destroys nearby asteroids when shot', False, (255, 255, 255))
+    portal_asteroid = font.render('Portal asteroid: Has a chance to teleport you to the other portal', False,
+                                  (255, 255, 255))
+    banana_asteroid = font.render('Banana: Gives you 5 bananas on collision', False, (255, 255, 255))
+    screen.blit(menu_text, (screen.get_width() / 2 - 220, screen.get_height() / 2 + 350))
+    screen.blit(menu_text2, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 400))
+    screen.blit(menu_text3, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 350))
+    screen.blit(menu_text4, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 300))
+    screen.blit(menu_text5, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 250))
+    screen.blit(menu_text6, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 200))
+    screen.blit(menu_text7, (screen.get_width() / 2 - 0, screen.get_height() / 2 - 400))
+    screen.blit(default_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 - 370))
+    screen.blit(reflective_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 - 220))
+    screen.blit(explosive_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 - 90))
+    screen.blit(portal_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 + 20))
+    screen.blit(banana_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 + 160))
+    screen.blit(welcome_text, (screen.get_width() / 2 - 220, screen.get_height() / 2 - 450))
+    for a in asteroids:
+        a.draw(screen)
+    pygame.display.update()
+
+
+def death_screen():
+    global save_highscores
+    death_text = font.render("You died", False, (255, 255, 255))
+    screen.blit(death_text, (screen.get_width() / 2 - 220, screen.get_height() / 2 - 450))
+    show_highscores(save_highscores)
+    save_highscores = False
+    pygame.display.update()
+
+
+def reset_game():
+    global multi_shot_level, turning_rate, score, bananas, health, invulnerable_ticks, double_time, double_time_secs, more_spawns, more_spawns_counter, save_highscores, game_over, shop_open, dont_shoot, fps, spawn_timer, ship, asteroids, death_time
+    multi_shot_level = 1
+    turning_rate = 1
+    score = 0
+    bananas = 0
+    health = 3
+    invulnerable_ticks = 75
+    double_time = 0
+    double_time_secs = 30
+    more_spawns = 30
+    more_spawns_counter = 0
+    save_highscores = True
+    game_over = False
+    shop_open = False
+    dont_shoot = False
+    fps = 75
+    spawn_timer = 3 * fps
+    ship = Ship((100, 100))
+    asteroids = []
+    death_time = 50
 
 
 # —--------------------------------------
@@ -319,10 +386,10 @@ class PortalAsteroid(Asteroid):
     def spawn(self):
         global asteroids
         asteroids.append(
-            RedPortalAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height())),
+            RedPortalAsteroid((random.randint(100, screen.get_width()), random.randint(0, screen.get_height())),
                               self.id + 1))
         asteroids.append(
-            BluePortalAsteroid((random.randint(0, screen.get_width()), random.randint(0, screen.get_height())),
+            BluePortalAsteroid((random.randint(100, screen.get_width()), random.randint(0, screen.get_height())),
                                self.id + 1))
         self.destroy()
 
@@ -389,6 +456,7 @@ asteroids = []
 out_of_bounds = [-150, -150, screen.get_width() + 150, screen.get_height() + 150]
 old_keys_pressed = pygame.key.get_pressed()
 font = pygame.font.SysFont('comicsans', 30, True)
+death_time = 50
 
 asteroids.append(Asteroid((screen.get_width() / 2 - 0, screen.get_height() / 2 - 380)))
 asteroids.append(ReflectiveAsteroid((screen.get_width() / 2 - 0, screen.get_height() / 2 - 230)))
@@ -404,43 +472,20 @@ while not game_over:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game_over = True
-
+    screen.fill((0, 0, 0))
     if pygame.key.get_pressed()[pygame.K_SPACE]:
         starting_menu = False
     if starting_menu:
-        welcome_text = font.render("Welcome to Asteroids and Bananas", False, (255, 255, 255))
-        menu_text = font.render('Press SPACE to start', False, (255, 255, 255))
-        menu_text2 = font.render('Use WASD to move', False, (255, 255, 255))
-        menu_text3 = font.render('Use SPACE to shoot', False, (255, 255, 255))
-        menu_text4 = font.render('Use E To open the shop', False, (255, 255, 255))
-        menu_text5 = font.render('Click the numbers in the shop to buy said item', False, (255, 255, 255))
-        menu_text6 = font.render('The game also runs slower while the shop is open', False, (255, 255, 255))
-        menu_text7 = font.render('Asteroid types:', False, (255, 255, 255))
-        default_asteroid = font.render('Default asteroid: Does nothing cool', False, (255, 255, 255))
-        reflective_asteroid = font.render('Reflective asteroid: Bounces bullets in a random direction', False, (255, 255, 255))
-        explosive_asteroid = font.render('Explosive asteroid: Destroys nearby asteroids when shot', False, (255, 255, 255))
-        portal_asteroid = font.render('Portal asteroid: Has a chance to teleport you to the other portal', False, (255, 255, 255))
-        banana_asteroid = font.render('Banana: Gives you 5 bananas on collision', False, (255, 255, 255))
-        screen.blit(menu_text, (screen.get_width() / 2 - 220, screen.get_height() / 2 + 350))
-        screen.blit(menu_text2, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 400))
-        screen.blit(menu_text3, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 350))
-        screen.blit(menu_text4, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 300))
-        screen.blit(menu_text5, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 250))
-        screen.blit(menu_text6, (screen.get_width() / 2 - 700, screen.get_height() / 2 - 200))
-        screen.blit(menu_text7, (screen.get_width() / 2 - 0, screen.get_height() / 2 - 400))
-        screen.blit(default_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 - 370))
-        screen.blit(reflective_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 - 220))
-        screen.blit(explosive_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 - 90))
-        screen.blit(portal_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 + 20))
-        screen.blit(banana_asteroid, (screen.get_width() / 2 + 130, screen.get_height() / 2 + 160))
-        screen.blit(welcome_text, (screen.get_width() / 2 - 220, screen.get_height() / 2 - 450))
-        for a in asteroids:
-            a.draw(screen)
-            print(a.position)
-        pygame.display.update()
+        starting_screen()
+        continue
+    death_time -= 1
+    if health <= 0:
+        death_screen()
+        if pygame.key.get_pressed()[pygame.K_SPACE] and death_time <= 0:
+            reset_game()
         continue
     screen.blit(background, (0, 0))
-
+    death_time = 50
     ship.update()
     ship.draw(screen)
 
@@ -495,8 +540,8 @@ while not game_over:
         spawn_asteroids()
         spawn_timer = 3 * fps
 
-    if health == 0:
-        game_over = True
+    #if health == 0:
+    #   game_over = True
 
     if asteroid_count < 5:
         for i in range(5):
@@ -525,7 +570,7 @@ while not game_over:
     pygame.display.update()
 # —--------------------------------------
 # After game code
-show_highscores()
+show_highscores(True)
 
 print("Game Over")
 pygame.quit()
