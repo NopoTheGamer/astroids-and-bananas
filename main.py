@@ -119,6 +119,8 @@ def show_highscores(save):
     highscores_str = []
     last_index = -1
 
+    # Will crash if you don't have this file
+    # But the repo comes with it so you should have it
     with open('highscore.txt', 'r') as f:  # Reads the high score file
         for x in f:  # This replace is to remove the newline character. so that it is an int instead of a string
             highscores.append(x.replace('\n', ''))
@@ -240,7 +242,7 @@ class Ship:
             self.position -= self.forward
             self.drift = (self.drift - self.forward) / 1.5
         if is_key_pressed[pygame.K_a]:
-            self.forward = self.forward.rotate(-1)
+            self.forward = self.forward.rotate(-1 * turning_rate)
         if is_key_pressed[pygame.K_d]:
             self.forward = self.forward.rotate(1 * turning_rate)
         if is_key_pressed[pygame.K_SPACE] and self.can_shoot == 0:
@@ -327,8 +329,6 @@ class ExplosiveAsteroid(Asteroid):
         super().__init__(position)
         self.image = pygame.image.load('assets/explosion.png')
         self.image = pygame.transform.scale(self.image, (128, 128))
-        self.boom = pygame.image.load('assets/boom.png')
-        self.boom = pygame.transform.scale(self.boom, (128, 128))
         self.explosion_size = Vector2(128, 128)
         self.type = "explosive"
 
@@ -463,6 +463,7 @@ out_of_bounds = [-150, -150, screen.get_width() + 150, screen.get_height() + 150
 old_keys_pressed = pygame.key.get_pressed()
 pop_sound = pygame.mixer.Sound("assets/pop_.mp3")
 pygame.mixer.music.load('assets/background_music.mp3')
+black = pygame.image.load('assets/black.png')
 pygame.mixer.music.play(-1)
 # So when I was first working on this the font name I had was invalid
 # And now im am too lazy too fix sizing issues so you will have to deal with the default font
@@ -562,7 +563,6 @@ while not game_over:
     banana_text = font.render('Bananas: ' + str(bananas), True, (255, 255, 255))
     health_text = font.render('Health: ' + str(health), True, (255, 255, 255))
     asteroid_count_text = font.render('Asteroids: ' + str(asteroid_count), True, (255, 255, 255))
-    black = pygame.image.load('assets/black.png')
     black = pygame.transform.scale(black, (600, 50))
     screen.blit(black, (screen.get_width() - screen.get_width(), screen.get_height() - screen.get_height()))
     screen.blit(score_text, (screen.get_width() - screen.get_width() + 10, screen.get_height() - screen.get_height() + 10))
@@ -582,5 +582,4 @@ while not game_over:
 # —--------------------------------------
 # After game code
 show_highscores(True)
-print("Game Over")
 pygame.quit()
