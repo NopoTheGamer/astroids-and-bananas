@@ -461,8 +461,11 @@ ship = Ship((100, 100))
 asteroids = []
 out_of_bounds = [-150, -150, screen.get_width() + 150, screen.get_height() + 150]
 old_keys_pressed = pygame.key.get_pressed()
+# BTD6 bloon pop sound
 pop_sound = pygame.mixer.Sound("assets/pop_.mp3")
-pygame.mixer.music.load('assets/background_music.mp3')
+# Stolen from https://www.youtube.com/watch?v=PZu3rLDtsdI
+pygame.mixer.music.load('assets/scifi_background.mp3')
+pygame.mixer.music.set_volume(0.5)
 black = pygame.image.load('assets/black.png')
 pygame.mixer.music.play(-1)
 # So when I was first working on this the font name I had was invalid
