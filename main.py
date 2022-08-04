@@ -448,7 +448,7 @@ class BluePortalAsteroid(PortalAsteroid):
 pygame.init()  # Pygame initialization
 pygame.display.set_caption("Asteroids and Bananas")
 background = pygame.image.load('assets/space_aw1.png')  # This is my desktop background lol
-screen = pygame.display.set_mode((1880, 1000))
+screen = pygame.display.set_mode((1880, 1000))  # If you have a screen smaller than 1920x1080 then the game just won't work
 clock = pygame.time.Clock()
 
 game_over = False  # Variables
