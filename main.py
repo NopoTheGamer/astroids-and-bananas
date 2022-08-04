@@ -291,7 +291,7 @@ class Asteroid:
         self.position = Vector2(position)
         self.position2 = Vector2(self.position[0] + 128, self.position[1] + 128)
         self.velocity = Vector2(random.randint(-3, 3), random.randint(-3, 3)) / 2
-        self.image = pygame.image.load('assets/lunar.png')
+        self.image = pygame.image.load('assets/asteroid.png')
         self.image = pygame.transform.scale(self.image, (128, 128))
         self.id = random.randint(0, 10000)  # If the id's collide, that's "intended"
         self.type = "default"  # The type is used for reflective and portal asteroids
